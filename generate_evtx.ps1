@@ -1,10 +1,12 @@
-# Define log source and name based on realistic scenarios
-$logSource = "Microsoft-Windows-Security-Auditing"
-$logName = "Security"
+$logSource = "TestEnvironment"
+$logName = "Application"  # Use 'Application' or another suitable log
 
-# Check and create log source if it doesn't exist
+# Check and create the log source if necessary
 if (-not [System.Diagnostics.EventLog]::SourceExists($logSource)) {
     [System.Diagnostics.EventLog]::CreateEventSource($logSource, $logName)
+    Write-Host "Log source '$logSource' created in '$logName' log."
+} else {
+    Write-Host "Log source '$logSource' already exists."
 }
 
 function Get-DetailedEventMessage {
@@ -13,7 +15,7 @@ function Get-DetailedEventMessage {
     )
 
     $domainPart = "1000-1001-1002" # Simulated domain part of SID
-    $userRID = Get-Random -Minimum 1000 -Maximum 1100 # Random RID for user
+    $userRID = Get-Random -Minimum 1000 -Maximum 1010 # Random RID for user
 
     switch ($EventID) {
         4624 { # User Login Success
@@ -129,23 +131,23 @@ function Write-WeightedLogEntry {
 
 # Placeholder for event weights hashtable
 $eventWeights = @{
-    4624 = @{ Weight = 30; Description = "User Login Success" }
-    4625 = @{ Weight = 20; Description = "User Login Failure" }
-    4648 = @{ Weight = 15; Description = "Explicit Credential Logon" }
-    4662 = @{ Weight = 10; Description = "Object Operation" }
-    4670 = @{ Weight = 5; Description = "Permissions on an object were changed" }
-    4720 = @{ Weight = 8; Description = "A user account was created" }
-    4722 = @{ Weight = 8; Description = "A user account was enabled" }
-    4725 = @{ Weight = 4; Description = "A user account was disabled" }
-    4732 = @{ Weight = 7; Description = "A member was added to a security-enabled local group" }
-    4738 = @{ Weight = 7; Description = "A user account was changed" }
-    4740 = @{ Weight = 6; Description = "A user account was locked out" }
-    4756 = @{ Weight = 5; Description = "A member was added to a security-enabled universal group" }
-    4776 = @{ Weight = 10; Description = "The computer attempted to validate the credentials for an account" }
-    4781 = @{ Weight = 4; Description = "The name of an account was changed" }
+    4624 = @{ Weight = 7; Description = "User Login Success" }
+    4625 = @{ Weight = 2; Description = "User Login Failure" }
+    4648 = @{ Weight = 1; Description = "Explicit Credential Logon" }
+    4662 = @{ Weight = 20; Description = "Object Operation" }
+    4670 = @{ Weight = 20; Description = "Permissions on an object were changed" }
+    4720 = @{ Weight = 2; Description = "A user account was created" }
+    4722 = @{ Weight = 2; Description = "A user account was enabled" }
+    4725 = @{ Weight = 1; Description = "A user account was disabled" }
+    4732 = @{ Weight = 2; Description = "A member was added to a security-enabled local group" }
+    4738 = @{ Weight = 10; Description = "A user account was changed" }
+    4740 = @{ Weight = 3; Description = "A user account was locked out" }
+    4756 = @{ Weight = 2; Description = "A member was added to a security-enabled universal group" }
+    4776 = @{ Weight = 3; Description = "The computer attempted to validate the credentials for an account" }
+    4781 = @{ Weight = 2; Description = "The name of an account was changed" }
     4798 = @{ Weight = 3; Description = "A user's local group membership was enumerated" }
     4799 = @{ Weight = 3; Description = "A security-enabled local group membership was enumerated" }
-    1102 = @{ Weight = 2; Description = "The audit log was cleared" }
+    1102 = @{ Weight = 1; Description = "The audit log was cleared" }
     4616 = @{ Weight = 1; Description = "The system time was changed" }
     4698 = @{ Weight = 2; Description = "A scheduled task was created" }
     4699 = @{ Weight = 2; Description = "A scheduled task was deleted" }
@@ -164,3 +166,16 @@ $evtxPath = Join-Path -Path $env:USERPROFILE -ChildPath "Desktop\CustomAppLog.ev
 wevtutil epl $logName $evtxPath /ow
 
 Write-Output "Log exported to $evtxPath"
+
+if ([System.Diagnostics.EventLog]::SourceExists($logSource)) {
+    [System.Diagnostics.EventLog]::DeleteEventSource($logSource)
+    Write-Host "Log source '$logSource' has been removed."
+} else {
+    Write-Host "Log source '$logSource' does not exist."
+}
+
+$logName = "Application"  # The log you want to clear
+
+# Clear the log
+Clear-EventLog -LogName $logName
+Write-Host "Log '$logName' has been cleared."
